@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include <stdlib.h>
 #include <stdio.h>
 #include "mpi.h"
@@ -8,6 +10,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <getopt.h>
+
+#include <sched.h>
 
 #include "common_types.h"
 
@@ -134,7 +138,7 @@ int main(int argc, char **argv){
 
 	MPI_Comm inter;
 	double time;
-	int size, i;
+	int size, i, rank, ranki;
 	char c;
 	char *a = NULL, *m = NULL;
 	char *path = NULL;
@@ -206,7 +210,17 @@ int main(int argc, char **argv){
 	else
 		MPI_Comm_spawn(path, argv+1, p, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &inter, MPI_ERRCODES_IGNORE);
 
+	
+	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+	MPI_Comm_rank(inter,&ranki);
+	int lname;
+	char pname[MPI_MAX_PROCESSOR_NAME];
+	MPI_Get_processor_name(pname, &lname);
+	int cpu_num = sched_getcpu();
+	printf("Node: %s, Rank: %d-%d. Master thread is running on CPU %3d\n", pname, rank, ranki, cpu_num);
 
+
+	
 	printf("Created %d slaves\n", p);
 
 

@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include <stdlib.h>
 #include <stdio.h>
 #include "mpi.h"
@@ -9,6 +11,8 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <omp.h>
+
+#include <sched.h>
 
 #include <semaphore.h>
 #include "common_types.h"
@@ -241,10 +245,16 @@ int main(int argc, char **argv){
 
 	MPI_Comm_rank(inter,&rank);
 
+	int lname;
+	char pname[MPI_MAX_PROCESSOR_NAME];
+	MPI_Get_processor_name(pname, &lname);
+	
 	omp_set_num_threads(t+1);
 	#pragma omp parallel private(n)
 	{
 		n = omp_get_thread_num();
+		int cpu_num = sched_getcpu();
+		printf("Node: %s, Rank: %3d. Thread %3d is running on CPU %3d\n", pname, rank, n, cpu_num);
 		if (n == 0)
 			thread_comm(inter);
 		else
